@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title></title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <img src="icons/icon48.png" alt="" width="28" height="28" />
+      <div>
+        <h1 id="heading"></h1>
+        <p id="subtitle"></p>
+      </div>
+    </header>
+
+    <div class="actions">
+      <div class="action-item">
+        <button id="openPhotos" type="button" class="action primary"></button>
+        <p id="openPhotosDesc" class="action-desc"></p>
+      </div>
+
+      <div class="action-item">
+        <label class="switch-row" id="hideHighlightsRow">
+          <span id="hideHighlightsLabel"></span>
+          <span class="switch">
+            <input id="hideHighlights" type="checkbox" />
+            <span class="slider"></span>
+          </span>
+        </label>
+        <p id="hideHighlightsDesc" class="action-desc"></p>
+      </div>
+
+      <div class="action-item">
+        <label class="switch-row" id="hideRow">
+          <span id="hideLabel"></span>
+          <span class="switch">
+            <input id="hideNonConsuming" type="checkbox" />
+            <span class="slider"></span>
+          </span>
+        </label>
+        <p id="hideNonConsumingDesc" class="action-desc"></p>
+      </div>
+
+      <div class="action-item">
+        <button id="selectOccupying" type="button" class="action"></button>
+        <p id="selectOccupyingDesc" class="action-desc"></p>
+      </div>
+
+      <div class="action-item">
+        <button id="deleteOccupying" type="button" class="action warning"></button>
+        <p id="deleteOccupyingDesc" class="action-desc"></p>
+      </div>
+
+      <div class="action-item">
+        <button id="deleteAll" type="button" class="action danger"></button>
+        <p id="deleteAllDesc" class="action-desc"></p>
+      </div>
+    </div>
+
+    <button id="stop" type="button" class="action stop" hidden></button>
+
+    <p id="hint" class="hint"></p>
+    <p id="stats" class="stats" hidden></p>
+
+    <script src="i18n.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

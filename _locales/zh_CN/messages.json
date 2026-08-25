@@ -1,0 +1,104 @@
+{
+  "extName": {
+    "message": "[B.M] Google 相册 工具"
+  },
+  "extDescription": {
+    "message": "在 Google 相册中筛选、选取并删除占用容量的文件。"
+  },
+  "popupSubtitle": {
+    "message": "打开相册后，可筛选、选取或删除占用容量的文件"
+  },
+  "openPhotos": {
+    "message": "打开相册"
+  },
+  "openPhotosDesc": {
+    "message": "打开 Google 相册页面"
+  },
+  "hideHighlights": {
+    "message": "隐藏精彩集锦"
+  },
+  "hideHighlightsDesc": {
+    "message": "隐藏时间轴上方的精彩集锦卡片，不会删除文件"
+  },
+  "hideNonConsuming": {
+    "message": "仅显示占用容量的文件"
+  },
+  "hideNonConsumingDesc": {
+    "message": "后台扫描，隐藏未占用空间的项目与空白日期栏"
+  },
+  "selectOccupying": {
+    "message": "选取占用容量的文件"
+  },
+  "selectOccupyingDesc": {
+    "message": "先扫描再勾选占用空间的项目，期间会锁定滚动"
+  },
+  "deleteOccupying": {
+    "message": "删除占用容量的文件"
+  },
+  "deleteOccupyingDesc": {
+    "message": "将占用空间的文件移到回收站"
+  },
+  "deleteAll": {
+    "message": "删除全部文件"
+  },
+  "deleteAllDesc": {
+    "message": "将当前页面的全部文件移到回收站"
+  },
+  "confirmDeleteAll": {
+    "message": "确定要删除当前页面中的全部文件吗？文件会移到回收站。"
+  },
+  "confirmDeleteOccupying": {
+    "message": "确定要删除占用容量的文件吗？这些文件会移到回收站。"
+  },
+  "hintNeedPhotos": {
+    "message": "请先打开 Google 相册再使用。"
+  },
+  "hintReady": {
+    "message": "可先开启“仅显示占用容量的文件”，再选取或删除。"
+  },
+  "hintRunning": {
+    "message": "执行中。可按“停止”，或点页面右下角的停止。"
+  },
+  "stop": {
+    "message": "停止"
+  },
+  "statsIdle": {
+    "message": "尚未执行。"
+  },
+  "statsScanning": {
+    "message": "扫描中：已扫描 $1 / $2 张，占用 $3 张。"
+  },
+  "statsSelecting": {
+    "message": "选取中：已扫描 $1 / $2 张，已选取 $3 张，占用 $4 张。"
+  },
+  "statsDeleting": {
+    "message": "删除中：已扫描 $1 / $2 张，已删除 $3 张。"
+  },
+  "statsDone": {
+    "message": "已完成：已扫描 $1 张，占用 $2 张，已删除 $3 张。"
+  },
+  "statsStopped": {
+    "message": "已停止：已扫描 $1 张，占用 $2 张，已删除 $3 张。"
+  },
+  "hudHide": {
+    "message": "筛选中｜已扫描 $1 / $2｜占用 $3"
+  },
+  "hudSelect": {
+    "message": "选取中｜已扫描 $1 / $2｜已选取 $3｜占用 $4"
+  },
+  "hudDelete": {
+    "message": "删除中｜已扫描 $1 / $2｜已删除 $3"
+  },
+  "hudDone": {
+    "message": "完成｜已扫描 $1｜占用 $2｜已删除 $3"
+  },
+  "hudStopped": {
+    "message": "已停止｜已扫描 $1｜占用 $2｜已删除 $3"
+  },
+  "errorTimeout": {
+    "message": "与页面通信超时，请刷新后再试"
+  },
+  "errorInTrash": {
+    "message": "当前在回收站中，无法删除。"
+  }
+}

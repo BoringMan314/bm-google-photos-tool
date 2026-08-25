@@ -1,0 +1,104 @@
+{
+  "extName": {
+    "message": "[B.M] Google Photos Tool"
+  },
+  "extDescription": {
+    "message": "Filter, select, and delete files that use storage in Google Photos."
+  },
+  "popupSubtitle": {
+    "message": "Open Photos to filter, select, or delete files that use storage"
+  },
+  "openPhotos": {
+    "message": "Open Photos"
+  },
+  "openPhotosDesc": {
+    "message": "Open the Google Photos page"
+  },
+  "hideHighlights": {
+    "message": "Hide highlights"
+  },
+  "hideHighlightsDesc": {
+    "message": "Hide the highlight cards above the timeline. Files are not deleted"
+  },
+  "hideNonConsuming": {
+    "message": "Only show files that use storage"
+  },
+  "hideNonConsumingDesc": {
+    "message": "Scan in the background and hide items that do not use storage, including empty date rows"
+  },
+  "selectOccupying": {
+    "message": "Select files that use storage"
+  },
+  "selectOccupyingDesc": {
+    "message": "Scan first, then select items that use storage; scrolling is locked meanwhile"
+  },
+  "deleteOccupying": {
+    "message": "Delete files that use storage"
+  },
+  "deleteOccupyingDesc": {
+    "message": "Move files that use storage to the trash"
+  },
+  "deleteAll": {
+    "message": "Delete all files"
+  },
+  "deleteAllDesc": {
+    "message": "Move all files on this page to the trash"
+  },
+  "confirmDeleteAll": {
+    "message": "Delete all files on this page? They will be moved to the trash."
+  },
+  "confirmDeleteOccupying": {
+    "message": "Delete files that use storage? They will be moved to the trash."
+  },
+  "hintNeedPhotos": {
+    "message": "Open Google Photos before using this extension."
+  },
+  "hintReady": {
+    "message": "Turn on “Only show files that use storage”, then select or delete."
+  },
+  "hintRunning": {
+    "message": "Running. Press Stop, or use the Stop button at the bottom right."
+  },
+  "stop": {
+    "message": "Stop"
+  },
+  "statsIdle": {
+    "message": "Not started yet."
+  },
+  "statsScanning": {
+    "message": "Scanning: $1 / $2 scanned, $3 using storage."
+  },
+  "statsSelecting": {
+    "message": "Selecting: $1 / $2 scanned, $3 selected, $4 using storage."
+  },
+  "statsDeleting": {
+    "message": "Deleting: $1 / $2 scanned, $3 moved to trash."
+  },
+  "statsDone": {
+    "message": "Done: $1 scanned, $2 using storage, $3 deleted."
+  },
+  "statsStopped": {
+    "message": "Stopped: $1 scanned, $2 using storage, $3 deleted."
+  },
+  "hudHide": {
+    "message": "Filtering｜scanned $1 / $2｜using storage $3"
+  },
+  "hudSelect": {
+    "message": "Selecting｜scanned $1 / $2｜selected $3｜using storage $4"
+  },
+  "hudDelete": {
+    "message": "Deleting｜scanned $1 / $2｜deleted $3"
+  },
+  "hudDone": {
+    "message": "Done｜scanned $1｜using storage $2｜deleted $3"
+  },
+  "hudStopped": {
+    "message": "Stopped｜scanned $1｜using storage $2｜deleted $3"
+  },
+  "errorTimeout": {
+    "message": "Timed out talking to the page. Refresh and try again"
+  },
+  "errorInTrash": {
+    "message": "You are in the trash, so files cannot be deleted here."
+  }
+}

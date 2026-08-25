@@ -1,0 +1,104 @@
+{
+  "extName": {
+    "message": "[B.M] Google フォト ツール"
+  },
+  "extDescription": {
+    "message": "Google フォトで、容量を使っているファイルを絞り込み、選択、削除します。"
+  },
+  "popupSubtitle": {
+    "message": "フォトを開いて、容量を使っているファイルを絞り込み、選択、削除できます"
+  },
+  "openPhotos": {
+    "message": "フォトを開く"
+  },
+  "openPhotosDesc": {
+    "message": "Google フォトのページを開きます"
+  },
+  "hideHighlights": {
+    "message": "ハイライトを非表示"
+  },
+  "hideHighlightsDesc": {
+    "message": "タイムライン上部のハイライトカードを非表示にします。ファイルは削除されません"
+  },
+  "hideNonConsuming": {
+    "message": "容量を使っているファイルのみ表示"
+  },
+  "hideNonConsumingDesc": {
+    "message": "バックグラウンドでスキャンし、容量を使っていない項目と空の日付見出しを非表示にします"
+  },
+  "selectOccupying": {
+    "message": "容量を使っているファイルを選択"
+  },
+  "selectOccupyingDesc": {
+    "message": "先にスキャンしてから、容量を使っている項目を選択します。その間はスクロールをロックします"
+  },
+  "deleteOccupying": {
+    "message": "容量を使っているファイルを削除"
+  },
+  "deleteOccupyingDesc": {
+    "message": "容量を使っているファイルをゴミ箱に移します"
+  },
+  "deleteAll": {
+    "message": "すべてのファイルを削除"
+  },
+  "deleteAllDesc": {
+    "message": "このページのすべてのファイルをゴミ箱に移します"
+  },
+  "confirmDeleteAll": {
+    "message": "このページのすべてのファイルを削除しますか？ファイルはゴミ箱に移されます。"
+  },
+  "confirmDeleteOccupying": {
+    "message": "容量を使っているファイルを削除しますか？ファイルはゴミ箱に移されます。"
+  },
+  "hintNeedPhotos": {
+    "message": "先に Google フォトを開いてから使用してください。"
+  },
+  "hintReady": {
+    "message": "「容量を使っているファイルのみ表示」をオンにしてから、選択または削除できます。"
+  },
+  "hintRunning": {
+    "message": "実行中です。「停止」または右下の停止ボタンでキャンセルできます。"
+  },
+  "stop": {
+    "message": "停止"
+  },
+  "statsIdle": {
+    "message": "未実行です。"
+  },
+  "statsScanning": {
+    "message": "スキャン中：スキャン $1 / $2 件、容量使用 $3 件。"
+  },
+  "statsSelecting": {
+    "message": "選択中：スキャン $1 / $2 件、選択 $3 件、容量使用 $4 件。"
+  },
+  "statsDeleting": {
+    "message": "削除中：スキャン $1 / $2 件、削除 $3 件。"
+  },
+  "statsDone": {
+    "message": "完了：スキャン $1 件、容量使用 $2 件、削除 $3 件。"
+  },
+  "statsStopped": {
+    "message": "停止：スキャン $1 件、容量使用 $2 件、削除 $3 件。"
+  },
+  "hudHide": {
+    "message": "絞り込み中｜スキャン $1 / $2｜容量使用 $3"
+  },
+  "hudSelect": {
+    "message": "選択中｜スキャン $1 / $2｜選択 $3｜容量使用 $4"
+  },
+  "hudDelete": {
+    "message": "削除中｜スキャン $1 / $2｜削除 $3"
+  },
+  "hudDone": {
+    "message": "完了｜スキャン $1｜容量使用 $2｜削除 $3"
+  },
+  "hudStopped": {
+    "message": "停止｜スキャン $1｜容量使用 $2｜削除 $3"
+  },
+  "errorTimeout": {
+    "message": "ページとの通信がタイムアウトしました。再読み込みしてからお試しください"
+  },
+  "errorInTrash": {
+    "message": "ゴミ箱では削除できません。"
+  }
+}
