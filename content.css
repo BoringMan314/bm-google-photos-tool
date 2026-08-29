@@ -12,7 +12,9 @@ html.gpsf-filter-on .gpsf-keep a[href*="/photo/"] {
   visibility: visible !important;
 }
 
-html.gpsf-filter-on .gpsf-date-header:not(.gpsf-keep-header) {
+html.gpsf-filter-on .gpsf-date-header:not(.gpsf-keep-header),
+html.gpsf-hide-highlights .gpsf-date-header:not(.gpsf-keep-header),
+.gpsf-date-wrap {
   visibility: hidden !important;
   height: 0 !important;
   max-height: 0 !important;

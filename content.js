@@ -6,11 +6,8 @@ const SCAN_DELAY_MS = 200;
 const HIGHLIGHT_CLASS = "gpsf-highlights";
 const HIGHLIGHT_TEXT_RE =
   /(精彩集錦|精彩集锦|精選影片|精选影片|ハイライト|(^|[^A-Za-z])Highlights?([^A-Za-z]|$))/i;
-const HIGHLIGHT_HREF_RE = /\/(memory|memories|highlight|highlights|creations?)(\/|$|\?)/i;
-
 const state = {
   job: null,
-  lastJob: null,
   hideHighlights: false,
   hideNonConsuming: false,
   cache: new Map(),
@@ -140,6 +137,9 @@ function extractMediaKey(href) {
 function isGridTile(anchor) {
   if (anchor.closest("[role='dialog'], [aria-modal='true']")) return false;
   const rect = anchor.getBoundingClientRect();
+  // Tiles we hid have no box left to measure, but they still belong to the grid
+  // and must stay visible to us so they can be shown again.
+  if (!rect.width && !rect.height) return Boolean(anchor.closest(`.${HIDDEN_CLASS}`));
   if (rect.width < 48 || rect.height < 48) return false;
   if (rect.width > 720 || rect.height > 720) return false;
   return true;
@@ -182,8 +182,17 @@ function isOccupying(info) {
   return info?.takesUpSpace === true && !info?.deleted;
 }
 
-function isHighlightHref(href) {
-  return HIGHLIGHT_HREF_RE.test(href || "");
+// Geometry is unusable for already hidden tiles, so group membership is decided
+// structurally instead of by measuring.
+function photoTilesIn(el) {
+  return [...el.querySelectorAll('a[href*="/photo/"]')].filter((anchor) => {
+    if (!extractMediaKey(anchor.getAttribute("href"))) return false;
+    return !anchor.closest("[role='dialog'], [aria-modal='true']");
+  });
+}
+
+function isTileVisible(anchor) {
+  return !anchor.closest(`.${HIDDEN_CLASS}`);
 }
 
 function applyTileVisibility(tile) {
@@ -208,19 +217,40 @@ function applyTileVisibility(tile) {
 const DATE_HEADER_RE =
   /(今天|昨天|前天|本日|今日|昨日|本週|本周|今月|今週|Today|Yesterday|This week)|(\d{4}\s*年)|(\d{1,2}\s*月)|((January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?\s+\d{1,2})|(\d{1,2}\s+(January|February|March|April|May|June|July|August|September|October|November|December))/i;
 
+const PERIOD_HEADER_RE =
+  /^(\d{4}\s*年(\s*\d{1,2}\s*月)?|\d{1,2}\s*月|\d{4}|(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?(\s+\d{4})?)$/i;
+
+function headerText(el) {
+  return (el?.textContent || "").replace(/\s+/g, " ").trim();
+}
+
+function isStickyMonthLabel(el) {
+  return Boolean(el?.matches?.("[jsname='suEOdc']"));
+}
+
 function isDateHeader(el) {
-  if (!el || el.closest("#gpsf-hud")) return false;
-  if (el.closest("nav, [role='navigation'], header, [role='banner']")) return false;
-  const text = (el.textContent || "").replace(/\s+/g, " ").trim();
-  if (!text || text.length > 64) return false;
+  if (!el || el.closest("#gpsf-hud, [role='dialog'], [aria-modal='true'], [jsname='KDcfTc']")) {
+    return false;
+  }
+  if (!isStickyMonthLabel(el) && el.closest("nav, [role='navigation'], header, [role='banner']")) {
+    return false;
+  }
+  const text = headerText(el);
+  if (!text || text.length > 80) return false;
   return DATE_HEADER_RE.test(text);
 }
 
 function collectDateHeaders() {
   const root = document.querySelector("[role='main']") || document.body;
   const found = new Set();
-  root.querySelectorAll("h1, h2, h3, h4, [role='heading']").forEach((el) => {
-    if (isDateHeader(el)) found.add(el);
+  const add = (el) => {
+    if (!el || !isDateHeader(el)) return;
+    found.add(el);
+  };
+
+  root.querySelectorAll("h1, h2, h3, h4, [role='heading']").forEach(add);
+  document.querySelectorAll("[jsname='gElRsf'], [jsname='suEOdc']").forEach((el) => {
+    add(el.closest("h1, h2, h3, h4, [role='heading']") || el);
   });
   return [...found];
 }
@@ -242,147 +272,198 @@ function collectHighlightLabelEls() {
   return hits;
 }
 
-function highlightCardFrom(el) {
+// The row holding the highlight cards is the largest ancestor that still contains
+// no grid photo and no date heading, so real photos can never be swept up with it.
+function highlightBlockFrom(el, headers) {
   let node = el;
-  let fallback = null;
-  for (let i = 0; i < 10 && node && node !== document.body; i += 1) {
-    const rect = node.getBoundingClientRect();
-    const cardLike =
-      rect.width >= 150 &&
-      rect.width <= 720 &&
-      rect.height >= 110 &&
-      rect.height <= 640;
-    if (cardLike) return node;
-    if (!fallback && rect.width >= 150 && rect.height >= 110 && rect.height <= 720) {
-      fallback = node;
-    }
+  let best = null;
+  for (let i = 0; i < 12 && node && node !== document.body; i += 1) {
+    if (node.matches("[role='main']") || node.querySelector("[role='main']")) break;
+    if (photoTilesIn(node).length) break;
+    if (headers.some((header) => node.contains(header))) break;
+    best = node;
     node = node.parentElement;
   }
-  return fallback;
-}
-
-function countGridTilesOutside(container, cards) {
-  return [...container.querySelectorAll('a[href*="/photo/"]')].filter((anchor) => {
-    if (!isGridTile(anchor)) return false;
-    return !cards.some((card) => card.contains(anchor) || anchor.contains(card));
-  }).length;
+  return best;
 }
 
 function hideHighlightSections() {
-  document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach((el) => {
-    if (!state.hideHighlights) {
+  if (!state.hideHighlights) {
+    document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach((el) => {
       el.classList.remove(HIGHLIGHT_CLASS);
-      hideElement(el, false);
-    }
-  });
-  if (!state.hideHighlights) return;
-
-  const cards = [];
-  const seen = new Set();
-  const addCard = (card) => {
-    if (!card || seen.has(card) || card.closest("#gpsf-hud")) return;
-    seen.add(card);
-    cards.push(card);
-  };
-
-  collectHighlightLabelEls().forEach((el) => addCard(highlightCardFrom(el)));
-  const main = document.querySelector("[role='main']") || document.body;
-  main.querySelectorAll("a[href*='/memory/'], a[href*='/highlight']").forEach((anchor) => {
-    addCard(highlightCardFrom(anchor) || tileRoot(anchor));
-  });
-
-  if (!cards.length) return;
-
-  const hideSet = new Set();
-  const remaining = [...cards];
-  while (remaining.length) {
-    const first = remaining[0];
-    let wrap = first.parentElement;
-    let chosen = first;
-    while (wrap && wrap !== document.body && !wrap.matches("[role='main']")) {
-      const inside = remaining.filter((card) => wrap.contains(card));
-      if (inside.length && countGridTilesOutside(wrap, inside) <= 2) {
-        chosen = wrap;
-        wrap = wrap.parentElement;
-        continue;
-      }
-      break;
-    }
-    hideSet.add(chosen);
-    for (let i = remaining.length - 1; i >= 0; i -= 1) {
-      if (chosen === remaining[i] || chosen.contains(remaining[i])) remaining.splice(i, 1);
-    }
-  }
-
-  hideSet.forEach((el) => {
-    el.classList.add(HIGHLIGHT_CLASS);
-    hideElement(el, true);
-  });
-}
-
-function hideEmptyDateSections() {
-  const oldHeaders = document.querySelectorAll(".gpsf-date-header");
-  if (!state.hideNonConsuming) {
-    oldHeaders.forEach((el) => {
-      el.classList.remove("gpsf-date-header", "gpsf-keep-header");
-      hideElement(el, false);
-    });
-    document.querySelectorAll(".gpsf-date-wrap").forEach((el) => {
-      el.classList.remove("gpsf-date-wrap");
       hideElement(el, false);
     });
     return;
   }
 
+  const main = document.querySelector("[role='main']") || document.body;
   const headers = collectDateHeaders();
-  oldHeaders.forEach((el) => {
-    if (!headers.includes(el)) {
-      el.classList.remove("gpsf-date-header", "gpsf-keep-header");
-      hideElement(el, false);
+  const blocks = new Set();
+  const addBlock = (el) => {
+    const block = highlightBlockFrom(el, headers);
+    if (block && !block.closest("#gpsf-hud")) blocks.add(block);
+  };
+
+  main.querySelectorAll("a[href*='/memory/'], a[href*='/highlight']").forEach(addBlock);
+  collectHighlightLabelEls().forEach(addBlock);
+
+  blocks.forEach((el) => {
+    el.classList.add(HIGHLIGHT_CLASS);
+    hideElement(el, true);
+  });
+}
+
+function sectionForHeader(header, headers) {
+  if (isStickyMonthLabel(header)) {
+    return header.closest("[jsname='ZGDl3b']") || header.parentElement;
+  }
+  let node = header.parentElement;
+  let best = null;
+  for (let i = 0; i < 6 && node && node !== document.body; i += 1) {
+    if (node.matches("[role='main'], c-wiz")) break;
+    if (headers.some((other) => other !== header && node.contains(other))) break;
+    best = node;
+    node = node.parentElement;
+  }
+  return best;
+}
+
+function markDateGroup(group, hide) {
+  group.header.classList.add("gpsf-date-header");
+  group.header.classList.toggle("gpsf-keep-header", !hide);
+  hideElement(group.header, hide);
+
+  const section = group.section;
+  if (!section || section === group.header) return;
+  if (section.classList.contains(HIGHLIGHT_CLASS)) return;
+  section.classList.toggle("gpsf-date-wrap", hide);
+  hideElement(section, hide);
+}
+
+function periodKey(text) {
+  const raw = headerText({ textContent: text });
+  const yearMonth = raw.match(/(\d{4})\s*年\s*(\d{1,2})\s*月/);
+  if (yearMonth) return `${yearMonth[1]}-${Number(yearMonth[2])}`;
+  const month = raw.match(/(\d{1,2})\s*月/);
+  if (month) return `*-${Number(month[1])}`;
+  return raw;
+}
+
+function samePeriod(a, b) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const [yearA, monthA] = a.split("-");
+  const [yearB, monthB] = b.split("-");
+  if (monthA !== monthB) return false;
+  return yearA === "*" || yearB === "*" || yearA === yearB;
+}
+
+function revealTilesForMeasure(anchors) {
+  const restored = [];
+  anchors.forEach((el) => {
+    let node = el;
+    for (let i = 0; i < 6 && node && node !== document.body; i += 1) {
+      if (node.classList.contains(HIDDEN_CLASS) && !node.classList.contains(HIGHLIGHT_CLASS)) {
+        node.classList.remove(HIDDEN_CLASS);
+        restored.push(node);
+      }
+      node = node.parentElement;
     }
   });
+  return () => restored.forEach((node) => node.classList.add(HIDDEN_CLASS));
+}
 
-  const occupyingTops = collectTiles()
-    .filter((tile) => isOccupying(state.cache.get(tile.mediaKey)))
-    .map((tile) => {
-      const rect = tile.el.getBoundingClientRect();
-      return rect.top + window.scrollY;
-    });
+function tilesBetween(anchors, top, nextTop) {
+  return anchors.filter((el) => {
+    const y = el.getBoundingClientRect().top + window.scrollY;
+    return y >= top - 8 && y < nextTop;
+  });
+}
 
-  const ranked = headers
-    .map((el) => {
-      const rect = el.getBoundingClientRect();
-      return { el, top: rect.top + window.scrollY };
+function nextPeriodTop(groups, index) {
+  for (let i = index + 1; i < groups.length; i += 1) {
+    if (groups[i].period && !groups[i].sticky) return groups[i].top;
+  }
+  return Number.POSITIVE_INFINITY;
+}
+
+// Sections hidden by a previous pass have no layout box, so their tiles cannot be
+// measured; clear the marks before anything reads tile geometry again.
+function clearDateMarks() {
+  document.querySelectorAll(".gpsf-date-header, .gpsf-date-wrap").forEach((el) => {
+    el.classList.remove("gpsf-date-header", "gpsf-date-wrap", "gpsf-keep-header");
+    if (!el.classList.contains(HIGHLIGHT_CLASS)) hideElement(el, false);
+  });
+}
+
+function hideEmptyDateSections() {
+  clearDateMarks();
+  if (!state.hideNonConsuming && !state.hideHighlights) return;
+
+  const headers = collectDateHeaders();
+  if (!headers.length) return;
+
+  const groups = headers
+    .map((header) => {
+      const text = headerText(header);
+      const sticky = isStickyMonthLabel(header);
+      return {
+        header,
+        section: sectionForHeader(header, headers),
+        tiles: [],
+        sticky,
+        period: sticky || PERIOD_HEADER_RE.test(text),
+        key: periodKey(text),
+        top: header.getBoundingClientRect().top + window.scrollY,
+        empty: false,
+      };
     })
     .sort((a, b) => a.top - b.top);
 
-  ranked.forEach((header, i) => {
-    const nextTop = ranked[i + 1] ? ranked[i + 1].top : Number.POSITIVE_INFINITY;
-    const hasKeep = occupyingTops.some((top) => top >= header.top - 8 && top < nextTop);
-    header.el.classList.add("gpsf-date-header");
-    header.el.classList.toggle("gpsf-keep-header", hasKeep);
-    hideElement(header.el, !hasKeep);
+  const anchors = collectTiles().map((tile) => tile.el);
+  const restoreTiles = revealTilesForMeasure(anchors);
+  groups.forEach((group, i) => {
+    if (group.sticky) return;
+    const nextTop = group.period
+      ? nextPeriodTop(groups, i)
+      : groups[i + 1]
+        ? groups[i + 1].top
+        : Number.POSITIVE_INFINITY;
+    const ranged = tilesBetween(anchors, group.top, nextTop);
+    const structural = group.section ? photoTilesIn(group.section) : [];
+    group.tiles = [...new Set([...ranged, ...structural])];
+  });
+  restoreTiles();
+  groups.forEach((group) => {
+    group.empty = group.tiles.length > 0 && !group.tiles.some(isTileVisible);
+  });
 
-    let wrap = header.el.parentElement;
-    for (let depth = 0; depth < 4 && wrap && wrap !== document.body; depth += 1) {
-      const photos = [...wrap.querySelectorAll('a[href*="/photo/"]')].filter(isGridTile);
-      if (photos.length < 1) {
-        wrap = wrap.parentElement;
-        continue;
-      }
-      if (wrap.matches("[role='main'], c-wiz") || wrap.querySelector("[role='main']")) break;
-      const anyKeep = photos.some((anchor) => {
-        const mediaKey = extractMediaKey(anchor.getAttribute("href"));
-        return isOccupying(state.cache.get(mediaKey));
-      });
-      wrap.classList.toggle("gpsf-date-wrap", !anyKeep);
-      hideElement(wrap, !anyKeep);
-      break;
-    }
+  groups.forEach((group) => {
+    if (!group.period || group.sticky || group.empty || group.tiles.length) return;
+    const childDays = groups.filter(
+      (other) => !other.period && other.tiles.length && samePeriod(group.key, other.key)
+    );
+    if (childDays.length && childDays.every((day) => day.empty)) group.empty = true;
+  });
+
+  groups
+    .filter((group) => group.sticky)
+    .forEach((sticky) => {
+      const peers = groups.filter((other) => !other.sticky && samePeriod(sticky.key, other.key));
+      const periods = peers.filter((other) => other.period);
+      const days = peers.filter((other) => !other.period && other.tiles.length);
+      sticky.empty =
+        (periods.length > 0 && periods.every((other) => other.empty)) ||
+        (days.length > 0 && days.every((other) => other.empty));
+    });
+
+  groups.forEach((group) => {
+    if (group.tiles.length || group.empty) markDateGroup(group, group.empty);
   });
 }
 
 function refreshVisibility() {
+  clearDateMarks();
   hideHighlightSections();
   collectTiles().forEach(applyTileVisibility);
   hideEmptyDateSections();
@@ -404,10 +485,6 @@ function getListedCount() {
   return Math.max(state.listedCount, state.cache.size);
 }
 
-function getScannedCount() {
-  return getLookedUpCount();
-}
-
 function getOccupyingCount() {
   let count = 0;
   state.cache.forEach((info) => {
@@ -419,11 +496,10 @@ function getOccupyingCount() {
 function getStats() {
   return {
     job: state.job,
-    lastJob: state.lastJob,
     running: Boolean(state.job),
     hideNonConsuming: state.hideNonConsuming,
     hideHighlights: state.hideHighlights,
-    scanned: getScannedCount(),
+    scanned: getLookedUpCount(),
     listed: getListedCount(),
     occupying: getOccupyingCount(),
     selected: state.selectedCount,
@@ -613,6 +689,7 @@ function enqueueUnknown(mediaKeys) {
 }
 
 function scan() {
+  clearDateMarks();
   hideHighlightSections();
   const tiles = collectTiles();
   tiles.forEach(applyTileVisibility);
@@ -835,10 +912,8 @@ async function waitUntilLookupsIdle(token) {
   }
 }
 
-async function fullScan(token, { lookup = true, source, applyVisibility = true } = {}) {
-  const ctx = source
-    ? { source, albumKey: "", authKey: "", query: "" }
-    : detectContext();
+async function fullScan(token, { lookup = true } = {}) {
+  const ctx = detectContext();
   state.listing = true;
   state.lastError = "";
   updateHud();
@@ -875,7 +950,7 @@ async function fullScan(token, { lookup = true, source, applyVisibility = true }
       });
       state.listedCount = allKeys.length;
       if (lookup) enqueueUnknown(keys);
-      if (applyVisibility) refreshVisibility();
+      refreshVisibility();
       updateHud();
 
       if (!added) emptyStreak += 1;
@@ -894,7 +969,7 @@ async function fullScan(token, { lookup = true, source, applyVisibility = true }
     if (!isCurrentJob(token)) return;
     state.listComplete = true;
     if (lookup) enqueueUnknown(allKeys);
-    if (applyVisibility) refreshVisibility();
+    refreshVisibility();
     updateHud();
   } catch (error) {
     if (state.scanToken !== token) return;
@@ -984,7 +1059,6 @@ async function runJob(type, runner) {
   const token = state.scanToken;
   resetScanState();
   state.job = type;
-  state.lastJob = type;
   state.lastError = "";
   state.scanDone = false;
   state.cancelled = false;
@@ -1078,7 +1152,6 @@ function startDeleteAll() {
 function resetForNewPage() {
   state.scanToken += 1;
   state.job = null;
-  state.lastJob = null;
   state.cache.clear();
   state.queue = [];
   state.queued.clear();
@@ -1155,10 +1228,8 @@ async function init() {
     if (!extAlive()) return;
     startObserver();
     startUrlWatch();
-    const stored = await chrome.storage.local.get(["hideNonConsuming", "hideHighlights"]);
-    if (stored.hideHighlights) setHideHighlights(true);
-    if (stored.hideNonConsuming) setHideNonConsuming(true);
-    else scan();
+    setLocal({ hideNonConsuming: false, hideHighlights: false });
+    scan();
   } catch (error) {
     console.warn("[GPSF] init", error);
   }

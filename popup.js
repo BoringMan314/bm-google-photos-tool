@@ -133,7 +133,12 @@ async function refreshStatus() {
 
 openPhotos.addEventListener("click", async () => {
   const tab = await getActiveTab();
+  hideHighlightsToggle.checked = false;
+  hideToggle.checked = false;
+  await chrome.storage.local.set({ hideNonConsuming: false, hideHighlights: false });
   if (tab && isPhotosUrl(tab.url)) {
+    await sendToTab(tab.id, { type: "GPSF_SET_HIDE_HIGHLIGHTS", enabled: false });
+    await sendToTab(tab.id, { type: "GPSF_SET_HIDE", enabled: false });
     window.close();
     return;
   }
@@ -204,12 +209,4 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 window.setInterval(refreshStatus, 400);
-chrome.storage.local.get(["hideNonConsuming", "hideHighlights"]).then((stored) => {
-  if (typeof stored.hideNonConsuming === "boolean") {
-    hideToggle.checked = stored.hideNonConsuming;
-  }
-  if (typeof stored.hideHighlights === "boolean") {
-    hideHighlightsToggle.checked = stored.hideHighlights;
-  }
-});
 refreshStatus();
